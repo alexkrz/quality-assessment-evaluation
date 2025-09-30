@@ -11,6 +11,7 @@ import json
 # External imports:
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import numpy as np
 from tqdm import tqdm
 
 # Local imports:
@@ -203,8 +204,9 @@ def _plot_shaded_pauc(
         curve_y_min = [starting_error, 0, 0]
 
     # Fill between the EDC curve and the theoretical best
-    ax.fill_between(x, y, interpolate=True, color="lightgray", alpha=0.5, step="post")
-    ax.fill_between(curve_x_min, curve_y_min, color="white", alpha=1.0, step="post")
+    x = np.concatenate([x, curve_x_min[::-1]])
+    y = np.concatenate([y, curve_y_min[::-1]])
+    ax.fill(x, y, color="lightgray", alpha=0.5)
 
 
 def _cut_curve(curve: dict, x_limit: float):
