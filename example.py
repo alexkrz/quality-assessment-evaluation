@@ -168,10 +168,10 @@ def _create_edc_plot(
     fig, ax = plt.subplots(figsize=(8, 6))
 
     # Plot the constant starting error as a horizontal line:
-    ax.axhline(y=starting_error, xmin=0, xmax=1, color='gray', linestyle='--', alpha=0.7)
+    ax.axhline(y=starting_error, xmin=0, xmax=1, color="gray", linestyle="--", alpha=0.7)
 
     # Plot the 'theoretical best' line:
-    ax.plot([0, starting_error], [starting_error, 0], color='gray', linestyle='--', alpha=0.7)
+    ax.plot([0, starting_error], [starting_error, 0], color="gray", linestyle="--", alpha=0.7)
 
     # Plot the shaded pAUC for the best curve:
     if shade_pauc:
@@ -187,18 +187,20 @@ def _create_edc_plot(
     relative_rankings = _compute_relative_rankings(pauc_values)
     colors = list(mcolors.TABLEAU_COLORS.values())
     for i, (quality_assessment_algorithm, edc_output) in enumerate(reversed(edc_outputs.items())):
-        discard_fractions = edc_output['discard_fractions']
-        error_fractions = edc_output['error_fractions']
-        label = (f'{quality_assessment_algorithm}'
-                 f' | pAUC: {pauc_values[quality_assessment_algorithm]:.4f}'
-                 f' | Ranking: {relative_rankings[quality_assessment_algorithm]:.2f}')
+        discard_fractions = edc_output["discard_fractions"]
+        error_fractions = edc_output["error_fractions"]
+        label = (
+            f"{quality_assessment_algorithm}"
+            f" | pAUC: {pauc_values[quality_assessment_algorithm]:.4f}"
+            f" | Ranking: {relative_rankings[quality_assessment_algorithm]:.2f}"
+        )
         color = colors[i % len(colors)]
-        ax.step(discard_fractions, error_fractions, where='post', label=label, color=color)
+        ax.step(discard_fractions, error_fractions, where="post", label=label, color=color)
 
-    ax.set_xlabel('Fraction of discarded comparisons')
+    ax.set_xlabel("Fraction of discarded comparisons")
     ax.set_ylabel(error_type.value)
     ax.legend()
-    ax.set_title('EDC Curves')
+    ax.set_title("EDC Curves")
     plt.tight_layout()
 
 
@@ -225,19 +227,19 @@ def _get_best_edc_output(edc_outputs: dict, pauc_values: dict) -> EdcOutput:
 
 
 def _plot_shaded_pauc(
-    ax,
+    ax: plt.Axes,
     edc_output: EdcOutput,
     pauc_discard_limit: float,
     starting_error: float,
 ):
     """Plot the pAUC in the given matplotlib axis."""
     pauc_curve = {
-        'x': edc_output['discard_fractions'],
-        'y': edc_output['error_fractions'],
+        "x": edc_output["discard_fractions"],
+        "y": edc_output["error_fractions"],
     }
     pauc_curve = _cut_curve(pauc_curve, x_limit=pauc_discard_limit)
-    x = pauc_curve['x']
-    y = pauc_curve['y']
+    x = pauc_curve["x"]
+    y = pauc_curve["y"]
 
     if pauc_discard_limit <= starting_error:
         curve_x_min = [0, pauc_discard_limit]
@@ -247,8 +249,8 @@ def _plot_shaded_pauc(
         curve_y_min = [starting_error, 0, 0]
 
     # Fill between the EDC curve and the theoretical best
-    ax.fill_between(x, y, interpolate=True, color='lightgray', alpha=0.5, step='post')
-    ax.fill_between(curve_x_min, curve_y_min, color='white', alpha=1.0, step='post')
+    ax.fill_between(x, y, interpolate=True, color="lightgray", alpha=0.5, step="post")
+    ax.fill_between(curve_x_min, curve_y_min, color="white", alpha=1.0, step="post")
 
 
 def _cut_curve(curve: dict, x_limit: float):
