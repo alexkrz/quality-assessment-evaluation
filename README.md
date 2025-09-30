@@ -8,7 +8,7 @@ This repository currently contains "Error versus Discard Characteristic" (EDC) P
 
 To quickly create a new Anaconda Python environment for `example.py`, run:
 
-```
+```bash
 conda create --name edcexample python=3.9
 conda activate edcexample
 pip install -r requirements.txt
