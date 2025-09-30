@@ -160,7 +160,7 @@ def _create_edc_plot(
     pauc_values: dict,
     pauc_discard_limit: float,
     shade_pauc: bool = True,
-) -> go.Figure():
+) -> go.Figure:
   """Create a go.Figure() and plot the EDC curves, including the pAUC for the best curve."""
   figure = go.Figure()
 
