@@ -9,8 +9,8 @@ from pathlib import Path
 import json
 
 # External imports:
-import plotly as plt
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from tqdm import tqdm
 
 # Local imports:
@@ -135,7 +135,7 @@ def main():
         pauc_values[quality_assessment_algorithm] = pauc_value
 
     # Create the EDC plot:
-    figure = _create_edc_plot(
+    _create_edc_plot(
         error_type=error_type,
         edc_outputs=edc_outputs,
         starting_error=true_starting_error,
@@ -143,7 +143,7 @@ def main():
         pauc_discard_limit=args.pauc_discard_limit,
         shade_pauc=args.shade_pauc,
     )
-    figure.show()
+    plt.show()
 
 
 def _min_max_normalize(quality_scores: dict, bin_count: int) -> dict:
@@ -163,37 +163,21 @@ def _create_edc_plot(
     pauc_values: dict,
     pauc_discard_limit: float,
     shade_pauc: bool = True,
-) -> go.Figure:
-    """Create a go.Figure() and plot the EDC curves, including the pAUC for the best curve."""
-    figure = go.Figure()
+):
+    """Create a matplotlib plot and plot the EDC curves, including the pAUC for the best curve."""
+    fig, ax = plt.subplots(figsize=(8, 6))
 
     # Plot the constant starting error as a horizontal line:
-    figure.add_trace(
-        go.Scatter(
-            x=[0, 1],
-            y=[starting_error, starting_error],
-            opacity=0.7,
-            showlegend=False,
-            line=dict(dash="dash", color="gray"),
-        )
-    )
+    ax.axhline(y=starting_error, xmin=0, xmax=1, color='gray', linestyle='--', alpha=0.7)
 
     # Plot the 'theoretical best' line:
-    figure.add_trace(
-        go.Scatter(
-            x=[0, starting_error],
-            y=[starting_error, 0],
-            opacity=0.7,
-            showlegend=False,
-            line=dict(dash="dash", color="gray"),
-        )
-    )
+    ax.plot([0, starting_error], [starting_error, 0], color='gray', linestyle='--', alpha=0.7)
 
     # Plot the shaded pAUC for the best curve:
     if shade_pauc:
         best_edc_output = _get_best_edc_output(edc_outputs, pauc_values)
         _plot_shaded_pauc(
-            figure=figure,
+            ax=ax,
             edc_output=best_edc_output,
             pauc_discard_limit=pauc_discard_limit,
             starting_error=starting_error,
@@ -201,32 +185,21 @@ def _create_edc_plot(
 
     # Plot EDC curves, with labels showing the algorithm names, pAUC values, and relative rankings:
     relative_rankings = _compute_relative_rankings(pauc_values)
+    colors = list(mcolors.TABLEAU_COLORS.values())
     for i, (quality_assessment_algorithm, edc_output) in enumerate(reversed(edc_outputs.items())):
-        discard_fractions = edc_output["discard_fractions"]
-        error_fractions = edc_output["error_fractions"]
-        label = (
-            f"{quality_assessment_algorithm}"
-            f" | pAUC: {pauc_values[quality_assessment_algorithm]:.4f}"
-            f" | Ranking: {relative_rankings[quality_assessment_algorithm]:.2f}"
-        )
-        line_color = plt.colors.DEFAULT_PLOTLY_COLORS[i % len(plt.colors.DEFAULT_PLOTLY_COLORS)]
-        figure.add_trace(
-            go.Scatter(
-                x=discard_fractions,
-                y=error_fractions,
-                name=label,
-                line_shape="hv",  # 'hv' for stepwise interpolation.
-                line_color=line_color,
-            )
-        )
+        discard_fractions = edc_output['discard_fractions']
+        error_fractions = edc_output['error_fractions']
+        label = (f'{quality_assessment_algorithm}'
+                 f' | pAUC: {pauc_values[quality_assessment_algorithm]:.4f}'
+                 f' | Ranking: {relative_rankings[quality_assessment_algorithm]:.2f}')
+        color = colors[i % len(colors)]
+        ax.step(discard_fractions, error_fractions, where='post', label=label, color=color)
 
-    # Adjust the figure layout and return the figure:
-    figure.update_layout(
-        template="plotly_white",
-        xaxis_title="Fraction of discarded comparisons",
-        yaxis_title=error_type.value,
-    )
-    return figure
+    ax.set_xlabel('Fraction of discarded comparisons')
+    ax.set_ylabel(error_type.value)
+    ax.legend()
+    ax.set_title('EDC Curves')
+    plt.tight_layout()
 
 
 def _compute_relative_rankings(pauc_values: dict) -> dict:
@@ -252,25 +225,30 @@ def _get_best_edc_output(edc_outputs: dict, pauc_values: dict) -> EdcOutput:
 
 
 def _plot_shaded_pauc(
-    figure: go.Figure,
+    ax,
     edc_output: EdcOutput,
     pauc_discard_limit: float,
     starting_error: float,
 ):
-    """Plot the pAUC in the given figure."""
+    """Plot the pAUC in the given matplotlib axis."""
     pauc_curve = {
-        "x": edc_output["discard_fractions"],
-        "y": edc_output["error_fractions"],
+        'x': edc_output['discard_fractions'],
+        'y': edc_output['error_fractions'],
     }
     pauc_curve = _cut_curve(pauc_curve, x_limit=pauc_discard_limit)
+    x = pauc_curve['x']
+    y = pauc_curve['y']
+
     if pauc_discard_limit <= starting_error:
         curve_x_min = [0, pauc_discard_limit]
         curve_y_min = [starting_error, starting_error - pauc_discard_limit]
     else:
         curve_x_min = [0, starting_error, pauc_discard_limit]
         curve_y_min = [starting_error, 0, 0]
-    for trace in _create_area_traces(pauc_curve["x"], pauc_curve["y"], curve_x_min, curve_y_min):
-        figure.add_trace(trace)
+
+    # Fill between the EDC curve and the theoretical best
+    ax.fill_between(x, y, interpolate=True, color='lightgray', alpha=0.5, step='post')
+    ax.fill_between(curve_x_min, curve_y_min, color='white', alpha=1.0, step='post')
 
 
 def _cut_curve(curve: dict, x_limit: float):
@@ -296,42 +274,6 @@ def _cut_curve(curve: dict, x_limit: float):
                 new_curve["y"].append(new_curve["y"][-1])
             break
     return new_curve
-
-
-def _create_area_traces(
-    curve_x_max,
-    curve_y_max,
-    curve_x_min=None,
-    curve_y_min=None,
-    area_line_color="lightgray",
-) -> list:
-    """Utility function to create a shaded plot area."""
-    traces = []
-    if curve_y_min is not None:
-        fill = "tonexty"
-    else:
-        fill = "tozeroy"
-    if curve_y_min is not None:
-        traces.append(
-            go.Scatter(
-                x=curve_x_min,
-                y=curve_y_min,
-                showlegend=False,
-                line_color="rgba(0,0,0,0)",
-            )
-        )
-    traces.append(
-        go.Scatter(
-            x=curve_x_max,
-            y=curve_y_max,
-            showlegend=False,
-            line_color=area_line_color,
-            line_shape="hv",
-            fill=fill,
-            fillpattern=go.scatter.Fillpattern(shape=".", solidity=0.01),
-        )
-    )
-    return traces
 
 
 if __name__ == "__main__":
