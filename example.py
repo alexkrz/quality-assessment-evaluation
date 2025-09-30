@@ -28,53 +28,7 @@ comparison_type_to_error_type = {
 }
 
 
-def main():
-    # Parse CLI arguments:
-    parser = argparse.ArgumentParser(
-        prog="EDC example",
-        description="This example computes EDC curves with pAUC values, and shows the plot in the default browser.",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    )
-    parser.add_argument(
-        "-d",
-        "--data",
-        type=Path,
-        default=Path(__file__).parent / "example_data.json",
-        help="Similarity scores (either mated or non-mated) and quality scores as a JSON file.",
-    )
-    parser.add_argument(
-        "-se",
-        "--starting-error",
-        type=float,
-        default=0.05,
-        help="The target starting error at the 0%% discard fraction.",
-    )
-    parser.add_argument(
-        "-pauc",
-        "--pauc-discard-limit",
-        type=float,
-        default=0.20,
-        help="The upper discard limit used to compute the pAUC value of the EDC curves.",
-    )
-    parser.add_argument(
-        "--shade-pauc",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Shade the pAUC for the best curve.",
-    )
-    parser.add_argument(
-        "-norm",
-        "--min-max-normalize",
-        type=int,
-        default=0,
-        help="If a value above 0 is given, e.g. 100,"
-        " all quality scores will be normalized to the integer range [0, specified value]"
-        " by using min-max normalization."
-        " Note that the minimum and maximum values are derived from the same data that is then normalized,"
-        " and this is only meant as an example for quality score normalization.",
-    )
-    args = parser.parse_args()
-
+def main(args: argparse.Namespace):
     # Load the input data:
     with open(args.data, "r", encoding="utf-8") as file:
         data = json.load(file)
@@ -279,4 +233,50 @@ def _cut_curve(curve: dict, x_limit: float):
 
 
 if __name__ == "__main__":
-    main()
+    # Parse CLI arguments:
+    parser = argparse.ArgumentParser(
+        prog="EDC example",
+        description="This example computes EDC curves with pAUC values, and shows the plot in the default browser.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "-d",
+        "--data",
+        type=Path,
+        default=Path(__file__).parent / "example_data.json",
+        help="Similarity scores (either mated or non-mated) and quality scores as a JSON file.",
+    )
+    parser.add_argument(
+        "-se",
+        "--starting-error",
+        type=float,
+        default=0.05,
+        help="The target starting error at the 0%% discard fraction.",
+    )
+    parser.add_argument(
+        "-pauc",
+        "--pauc-discard-limit",
+        type=float,
+        default=0.20,
+        help="The upper discard limit used to compute the pAUC value of the EDC curves.",
+    )
+    parser.add_argument(
+        "--shade-pauc",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Shade the pAUC for the best curve.",
+    )
+    parser.add_argument(
+        "-norm",
+        "--min-max-normalize",
+        type=int,
+        default=0,
+        help="If a value above 0 is given, e.g. 100,"
+        " all quality scores will be normalized to the integer range [0, specified value]"
+        " by using min-max normalization."
+        " Note that the minimum and maximum values are derived from the same data that is then normalized,"
+        " and this is only meant as an example for quality score normalization.",
+    )
+    args = parser.parse_args()
+
+    main(args)

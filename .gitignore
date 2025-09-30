@@ -5,3 +5,6 @@ local
 .flake8
 .pylintrc
 .style.yapf
+
+# Juypter notebooks
+*.ipynb
