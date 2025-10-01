@@ -5,23 +5,25 @@ See the CLI help for more, as defined below.
 
 # Standard imports:
 import argparse
-from pathlib import Path
 import json
+from pathlib import Path
 
 # External imports:
-import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 
 # Local imports:
-from edc import EdcErrorType
-from edc import EdcSample
-from edc import EdcSamplePair
-from edc import EdcOutput
-from edc import compute_edc
-from edc import compute_edc_pauc
-from edc import compute_edc_area_under_theoretical_best
+from edc import (
+    EdcErrorType,
+    EdcOutput,
+    EdcSample,
+    EdcSamplePair,
+    compute_edc,
+    compute_edc_area_under_theoretical_best,
+    compute_edc_pauc,
+)
 
 comparison_type_to_error_type = {
     "mated": EdcErrorType.FNMR,
@@ -31,7 +33,7 @@ comparison_type_to_error_type = {
 
 def main(args: argparse.Namespace):
     # Load the input data:
-    with open(args.data, "r", encoding="utf-8") as file:
+    with open(args.data, encoding="utf-8") as file:
         data = json.load(file)
 
     comparison_type = data["similarity_scores"]["type"].lower().replace("-", "")

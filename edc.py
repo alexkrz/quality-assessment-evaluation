@@ -5,8 +5,8 @@ See example.py for a concrete usage example.
 """
 
 # Standard imports:
-from typing import Optional, Union, TypedDict, Callable, Iterable
 from enum import Enum
+from typing import Callable, Iterable, Optional, TypedDict, Union
 
 # External imports:
 import numpy as np
@@ -203,10 +203,8 @@ def compute_edc(
 
     assert (
         sum(
-            (
-                0 if value is None else 1
-                for value in (similarity_score_threshold, similarity_score_quantile, starting_error)
-            )
+            0 if value is None else 1
+            for value in (similarity_score_threshold, similarity_score_quantile, starting_error)
         )
         == 1
     ), (
